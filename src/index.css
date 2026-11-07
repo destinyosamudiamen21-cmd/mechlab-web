@@ -1105,3 +1105,40 @@ button:focus-visible {
   white-space: normal;
   min-width: 140px;
 }
+
+/* ---------- Progress ---------- */
+.stat-grid {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  margin-bottom: 8px;
+}
+.stat-value {
+  font-size: 28px;
+  font-weight: 700;
+  margin: 0;
+  font-variant-numeric: tabular-nums;
+}
+.meter {
+  height: 8px;
+  border-radius: 999px;
+  background: var(--grid);
+  overflow: hidden;
+  margin-top: 10px;
+}
+.meter span {
+  display: block;
+  height: 100%;
+  background: var(--good);
+  border-radius: inherit;
+}
+.badge.warn {
+  border-color: var(--warn);
+  color: var(--warn);
+}
+.next-question {
+  margin-top: 12px;
+}
+.good-text {
+  color: var(--good);
+}

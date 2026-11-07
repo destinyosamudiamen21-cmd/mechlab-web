@@ -1,10 +1,12 @@
 import { useQuery } from "@tanstack/react-query";
+import type { QueryClient } from "@tanstack/react-query";
 import { postJson, request } from "./client";
 import type {
   AnswerResult,
   CourseRead,
   CourseSummary,
   DecodeResult,
+  ProgressRead,
   QuestionRead,
   QuestionSolution,
   QuestionSummary,
@@ -79,4 +81,20 @@ export function checkAnswer(slug: string, label: string, value: number) {
     `/questions/${encodeURIComponent(slug)}/check`,
     { label, value }
   );
+}
+
+// The logged-in student's own record, or nothing for visitors (userId null).
+// The user id is part of the key, so one student's progress is never shown to the next
+// person who logs in on the same phone.
+export function useProgress(userId: number | null) {
+  return useQuery({
+    queryKey: ["progress", userId],
+    queryFn: () => request<ProgressRead>("/me/progress"),
+    enabled: userId !== null,
+  });
+}
+
+// After a check, the stored progress is out of date: refetch it next time it is shown.
+export function refreshProgress(queryClient: QueryClient) {
+  return queryClient.invalidateQueries({ queryKey: ["progress"] });
 }

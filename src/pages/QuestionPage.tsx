@@ -1,19 +1,24 @@
 import { useState } from "react";
 import type { ReactNode } from "react";
 import { Link, useParams } from "react-router";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "../api/auth";
 import { useThreads } from "../api/community";
 import {
   checkAnswer,
   checkDecoder,
+  refreshProgress,
   useQuestion,
+  useProgress,
   useSolution,
+  useTopicQuestions,
 } from "../api/queries";
 import type {
   AttemptContext,
+  CourseProgress,
   QuestionRead,
   QuestionSolution,
+  QuestionSummary,
 } from "../api/types";
 import { ErrorView, Loading } from "../components/QueryStates";
 import ThreadList from "../components/ThreadList";
@@ -23,13 +28,20 @@ type PartPrompt = QuestionRead["parts"][number];
 type PartSolution = QuestionSolution["parts"][number];
 
 // Marks the decoder phrases inside the question text, so the student sees
-// exactly which words carry the physics.
+// exactly which words carry the physics. A phrase written with "..." in the
+// content file ("supply ... air at 1 bar") spans a gap: each piece is marked.
 function highlightPhrases(statement: string, phrases: string[]): ReactNode[] {
   const lower = statement.toLowerCase();
-  const hits = phrases
-    .map((phrase) => ({
-      start: lower.indexOf(phrase.toLowerCase()),
-      length: phrase.length,
+  const pieces = phrases.flatMap((phrase) =>
+    phrase
+      .split(/\.\.\.|…/)
+      .map((piece) => piece.trim())
+      .filter((piece) => piece !== "")
+  );
+  const hits = pieces
+    .map((piece) => ({
+      start: lower.indexOf(piece.toLowerCase()),
+      length: piece.length,
     }))
     .filter((hit) => hit.start >= 0)
     .sort((a, b) => a.start - b.start);
@@ -79,6 +91,12 @@ function reviewNote(question: QuestionRead): {
 
 export default function QuestionPage() {
   const { slug = "" } = useParams();
+  // The key gives every question a fresh page: moving to the next question must not
+  // carry over the previous one's decoder choices, answers or "solved" marks.
+  return <QuestionView key={slug} slug={slug} />;
+}
+
+function QuestionView({ slug }: { slug: string }) {
   const {
     data: question,
     isPending,
@@ -89,6 +107,10 @@ export default function QuestionPage() {
   // What the student has tried so far. It is attached if they ask the community for help.
   const [choices, setChoices] = useState<Record<number, string>>({});
   const [answers, setAnswers] = useState<Record<string, number>>({});
+  const [solved, setSolved] = useState<Set<string>>(new Set());
+  const siblings = useTopicQuestions(question?.topic_slug ?? "");
+  const { user } = useAuth();
+  const progress = useProgress(user?.id ?? null);
 
   if (isPending) return <Loading label='Loading question…' />;
   if (isError) return <ErrorView error={error} onRetry={() => refetch()} />;
@@ -97,6 +119,12 @@ export default function QuestionPage() {
   const decodedCount = Object.keys(choices).length;
   const unlocked = decodedCount >= total;
   const review = reviewNote(question);
+  const checkableLabels = question.parts
+    .filter((part) => part.checkable)
+    .map((part) => part.label);
+  const allSolved =
+    checkableLabels.length > 0 &&
+    checkableLabels.every((label) => solved.has(label));
 
   const attempt: AttemptContext = {
     decoder_choices: Object.entries(choices).map(([position, choice]) => ({
@@ -165,9 +193,12 @@ export default function QuestionPage() {
                 key={part.label}
                 slug={question.slug}
                 part={part}
-                onAttempt={(label, value) =>
-                  setAnswers((current) => ({ ...current, [label]: value }))
-                }
+                onAttempt={(label, value, correct) => {
+                  setAnswers((current) => ({ ...current, [label]: value }));
+                  if (correct) {
+                    setSolved((current) => new Set(current).add(label));
+                  }
+                }}
               />
             ))}
           </ol>
@@ -180,6 +211,15 @@ export default function QuestionPage() {
           </div>
         )}
       </section>
+
+      {allSolved && (
+        <NextQuestion
+          current={question.slug}
+          topicSlug={question.topic_slug}
+          questions={siblings.data ?? []}
+          finished={finishedSlugs(progress.data?.courses ?? [])}
+        />
+      )}
 
       <section className='question-section'>
         <h2 className='heading'>Solution</h2>
@@ -201,9 +241,13 @@ type DecoderItemProps = {
 };
 
 function DecoderItem({ slug, prompt, onDone }: DecoderItemProps) {
+  const queryClient = useQueryClient();
   const mutation = useMutation({
     mutationFn: (choice: string) => checkDecoder(slug, prompt.position, choice),
-    onSuccess: (_result, choice) => onDone(prompt.position, choice),
+    onSuccess: (_result, choice) => {
+      onDone(prompt.position, choice);
+      refreshProgress(queryClient);
+    },
   });
   const result = mutation.data;
 
@@ -247,18 +291,20 @@ function DecoderItem({ slug, prompt, onDone }: DecoderItemProps) {
 type PartAnswerProps = {
   slug: string;
   part: PartPrompt;
-  onAttempt: (label: string, value: number) => void;
+  onAttempt: (label: string, value: number, correct: boolean) => void;
 };
 
 function PartAnswer({ slug, part, onAttempt }: PartAnswerProps) {
   const [text, setText] = useState("");
   const [inputError, setInputError] = useState<string | null>(null);
   const [wrongTries, setWrongTries] = useState(0);
+  const queryClient = useQueryClient();
   const mutation = useMutation({
     mutationFn: (value: number) => checkAnswer(slug, part.label, value),
     onSuccess: (result, value) => {
-      onAttempt(part.label, value);
+      onAttempt(part.label, value, result.correct);
       if (!result.correct) setWrongTries((count) => count + 1);
+      refreshProgress(queryClient);
     },
   });
   const result = mutation.data;
@@ -466,5 +512,75 @@ function Community({
         <ThreadList threads={data.items} empty={null} />
       )}
     </>
+  );
+}
+
+// Questions the logged-in student has fully solved, from their stored progress.
+function finishedSlugs(courses: CourseProgress[]): Set<string> {
+  return new Set(
+    courses
+      .flatMap((course) => course.topics)
+      .flatMap((topic) => topic.questions)
+      .filter((q) => q.parts_total > 0 && q.parts_solved === q.parts_total)
+      .map((q) => q.slug)
+  );
+}
+
+// Shown once every markable part is solved: keep the student moving.
+// After a standard question, a twisted one is offered first: solving a differently
+// worded version is the real test of understanding. After a twisted one, the list
+// simply continues, so nobody gets bounced between the same two questions.
+// Questions the student already finished (when logged in) are skipped.
+function NextQuestion({
+  current,
+  topicSlug,
+  questions,
+  finished,
+}: {
+  current: string;
+  topicSlug: string;
+  questions: QuestionSummary[];
+  finished: Set<string>;
+}) {
+  const index = questions.findIndex((item) => item.slug === current);
+  // Everything after this question, then wrap round to the start.
+  const ahead = [...questions.slice(index + 1), ...questions.slice(0, Math.max(index, 0))]
+    .filter((item) => item.slug !== current && !finished.has(item.slug));
+  const currentIsTwisted = questions[index]?.difficulty === "twisted";
+  const twisted = currentIsTwisted
+    ? undefined
+    : ahead.find((item) => item.difficulty === "twisted");
+  const next = twisted ?? ahead[0];
+
+  return (
+    <section className='question-section'>
+      <div className='panel next-question'>
+        <p className='card-title'>Every part solved.</p>
+        {next ? (
+          <>
+            <p className='hint'>
+              {next === twisted
+                ? "Now try one worded to catch you out:"
+                : "Next question on this topic:"}
+            </p>
+            <Link className='button' to={`/questions/${next.slug}`}>
+              {next.title}
+            </Link>
+          </>
+        ) : (
+          <>
+            <p className='hint'>
+              You have solved every question on this topic so far.
+            </p>
+            <Link
+              className='button button-quiet'
+              to={`/topics/${topicSlug}?tab=see`}
+            >
+              Back to the topic
+            </Link>
+          </>
+        )}
+      </div>
+    </section>
   );
 }

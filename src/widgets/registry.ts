@@ -12,6 +12,7 @@ const WIDGETS: Record<string, Widget> = {
   EngineCycle: lazy(() => import("./EngineCycle")),
   SystemsExplorer: lazy(() => import("./SystemsExplorer")),
   PathFunctions: lazy(() => import("./PathFunctions")),
+  PhaseChange: lazy(() => import("./PhaseChange")),
   FirstLawCycle: lazy(() => import("./FirstLawCycle")),
   SteadyFlow: lazy(() => import("./SteadyFlow")),
   BernoulliPipe: lazy(() => import("./BernoulliPipe")),

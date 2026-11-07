@@ -9,6 +9,7 @@ import NotFoundPage from "./pages/NotFoundPage";
 import AskPage from "./pages/AskPage";
 import CommunityPage from "./pages/CommunityPage";
 import ThreadPage from "./pages/ThreadPage";
+import ProgressPage from "./pages/ProgressPage";
 
 export default function App() {
   return (
@@ -26,6 +27,7 @@ export default function App() {
         <Route path='community' element={<CommunityPage />} />
         <Route path='community/new' element={<AskPage />} />
         <Route path='community/threads/:id' element={<ThreadPage />} />
+        <Route path='progress' element={<ProgressPage />} />
 
         <Route path='*' element={<NotFoundPage />} />
       </Route>

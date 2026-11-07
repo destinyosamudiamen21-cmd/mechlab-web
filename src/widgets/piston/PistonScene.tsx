@@ -171,6 +171,10 @@ export default function PistonScene({ volume, heat }: Props) {
       metal.dispose();
       glass.dispose();
       gasMaterial.dispose();
+      // Browsers allow only a handful of live WebGL contexts per page, and dispose()
+      // alone leaves this one held until the browser tidies up. Opening several 3D
+      // topics in a row then fails with "Too many active WebGL contexts".
+      renderer.forceContextLoss();
       renderer.dispose();
       renderer.domElement.remove();
     };

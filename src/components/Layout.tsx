@@ -10,12 +10,13 @@ type NavEntry = { to: string; label: string; icon: IconName; ready: boolean };
 const NAV: NavEntry[] = [
   { to: "/", label: "Courses", icon: "courses", ready: true },
   { to: "/community", label: "Community", icon: "community", ready: true },
-  { to: "/progress", label: "Progress", icon: "progress", ready: false },
+  { to: "/progress", label: "Progress", icon: "progress", ready: true },
 ];
 
 // Which sidebar item a page belongs to. Course, topic and question pages are all "Courses".
 function sectionOf(pathname: string): IconName | null {
   if (pathname.startsWith("/community")) return "community";
+  if (pathname.startsWith("/progress")) return "progress";
   if (
     pathname === "/" ||
     pathname.startsWith("/courses") ||
@@ -112,6 +113,8 @@ function Account() {
   function handleLogout() {
     logout();
     queryClient.removeQueries({ queryKey: ["me"] });
+    // Progress is personal: never leave it in memory for the next person on this device.
+    queryClient.removeQueries({ queryKey: ["progress"] });
   }
 
   return (

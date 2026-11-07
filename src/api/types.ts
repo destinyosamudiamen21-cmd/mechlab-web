@@ -23,3 +23,44 @@ export type ReplyRead = Schemas["ReplyRead"];
 export type ThreadCreate = Schemas["ThreadCreate"];
 // What a student tried on a question: decoder choices and submitted answers.
 export type AttemptContext = NonNullable<ThreadCreate["attempt_context"]>;
+
+// Progress (GET /api/me/progress). Written by hand to match app/models/progress.py.
+// Once you run `npm run gen:api` against the new backend, these can come from schema.d.ts
+// like the types above.
+export type QuestionProgress = {
+  slug: string;
+  title: string;
+  parts_solved: number;
+  parts_total: number;
+  attempted: boolean;
+};
+
+export type TopicProgress = {
+  slug: string;
+  title: string;
+  questions_total: number;
+  questions_attempted: number;
+  parts_solved: number;
+  parts_total: number;
+  decoded_first_time: number;
+  decoded_total: number;
+  needs_work: boolean;
+  questions: QuestionProgress[];
+};
+
+export type CourseProgress = {
+  code: string;
+  title: string;
+  topics: TopicProgress[];
+};
+
+export type ProgressRead = {
+  summary: {
+    questions_attempted: number;
+    parts_solved: number;
+    decoded_first_time: number;
+    decoded_total: number;
+    last_active: string | null;
+  };
+  courses: CourseProgress[];
+};
