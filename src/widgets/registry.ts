@@ -29,6 +29,11 @@ const WIDGETS: Record<string, Widget> = {
   PressureVessel: lazy(() => import("./PressureVessel")),
   FailureTheories: lazy(() => import("./FailureTheories")),
   HelicalSpring: lazy(() => import("./HelicalSpring")),
+  ProjectileMotion: lazy(() => import("./ProjectileMotion")),
+  InclineBlock: lazy(() => import("./InclineBlock")),
+  EnergyTrack: lazy(() => import("./EnergyTrack")),
+  SpinningPlatform: lazy(() => import("./SpinningPlatform")),
+  OrbitExplorer: lazy(() => import("./OrbitExplorer")),
 };
 
 export function getWidget(name: string | null | undefined): Widget | undefined {

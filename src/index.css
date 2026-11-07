@@ -1268,3 +1268,34 @@ button:focus-visible {
 .coming-soon {
   max-width: 60ch;
 }
+
+/* Energy track widget: one bar per kind of energy */
+.energy-bars {
+  display: grid;
+  gap: 6px;
+  margin: 12px 0 4px;
+}
+.energy-bar {
+  display: grid;
+  grid-template-columns: 9.5rem 1fr 4.5rem;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+}
+.energy-bar-label {
+  color: var(--ink-soft);
+}
+.energy-bar-track {
+  height: 12px;
+  border-radius: 6px;
+  background: #e6ebf2;
+  overflow: hidden;
+}
+.energy-bar-fill {
+  display: block;
+  height: 100%;
+}
+.energy-bar-value {
+  font-family: var(--mono);
+  text-align: right;
+}
