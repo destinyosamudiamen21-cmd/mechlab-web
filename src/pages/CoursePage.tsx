@@ -2,6 +2,7 @@ import { Link, useParams } from "react-router";
 import { useCourse } from "../api/queries";
 import { ErrorView, Loading } from "../components/QueryStates";
 import { getWidget } from "../widgets/registry";
+import { levelPath } from "../levels";
 
 const VISUAL_LABELS: Record<string, string> = {
   "3d": "3D",
@@ -18,8 +19,8 @@ export default function CoursePage() {
 
   return (
     <>
-      <Link to='/' className='back'>
-        ← All courses
+      <Link to={levelPath(course)} className='back'>
+        ← {course.level} level
       </Link>
       <p className='eyebrow'>{course.code}</p>
       <h1>{course.title}</h1>

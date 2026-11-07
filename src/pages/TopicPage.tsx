@@ -40,7 +40,7 @@ export default function TopicPage() {
   return (
     <>
       <Link to='/' className='back'>
-        ← All courses
+        ← All levels
       </Link>
       <h1>{topic.title}</h1>
 

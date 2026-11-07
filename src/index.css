@@ -1257,7 +1257,14 @@ button:focus-visible {
   color: var(--good);
 }
 
-/* Courses page: one block per level */
-.level-group {
-  margin-top: 2rem;
+
+/* Levels and departments: a department with no courses yet looks quieter */
+.card-muted {
+  opacity: 0.6;
+}
+.card-muted:hover {
+  opacity: 0.85;
+}
+.coming-soon {
+  max-width: 60ch;
 }

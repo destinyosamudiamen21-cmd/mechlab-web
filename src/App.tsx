@@ -2,6 +2,8 @@ import { Route, Routes } from "react-router";
 import Layout from "./components/Layout";
 import CoursesPage from "./pages/CoursesPage";
 import CoursePage from "./pages/CoursePage";
+import LevelPage from "./pages/LevelPage";
+import DepartmentPage from "./pages/DepartmentPage";
 import TopicPage from "./pages/TopicPage";
 import QuestionPage from "./pages/QuestionPage";
 import AuthPage from "./pages/AuthPage";
@@ -16,6 +18,8 @@ export default function App() {
     <Routes>
       <Route element={<Layout />}>
         <Route index element={<CoursesPage />} />
+        <Route path='levels/:level' element={<LevelPage />} />
+        <Route path='levels/:level/:department' element={<DepartmentPage />} />
         <Route path='courses/:code' element={<CoursePage />} />
         <Route path='topics/:slug' element={<TopicPage />} />
         <Route path='questions/:slug' element={<QuestionPage />} />
