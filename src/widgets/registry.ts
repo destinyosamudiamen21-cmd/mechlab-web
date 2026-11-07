@@ -34,6 +34,12 @@ const WIDGETS: Record<string, Widget> = {
   EnergyTrack: lazy(() => import("./EnergyTrack")),
   SpinningPlatform: lazy(() => import("./SpinningPlatform")),
   OrbitExplorer: lazy(() => import("./OrbitExplorer")),
+  ChargeField: lazy(() => import("./ChargeField")),
+  CapacitorPlates: lazy(() => import("./CapacitorPlates")),
+  ResistorCircuit: lazy(() => import("./ResistorCircuit")),
+  ParallelWires: lazy(() => import("./ParallelWires")),
+  CoilGenerator: lazy(() => import("./CoilGenerator")),
+  ACCircuit: lazy(() => import("./ACCircuit")),
 };
 
 export function getWidget(name: string | null | undefined): Widget | undefined {
