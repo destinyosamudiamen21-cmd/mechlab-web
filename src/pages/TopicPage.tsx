@@ -1,11 +1,17 @@
 import { Suspense } from "react";
 import { Link, useParams, useSearchParams } from "react-router";
 import { useAuth } from "../api/auth";
-import { useProgress, useTopic, useTopicQuestions } from "../api/queries";
+import {
+  useLesson,
+  useProgress,
+  useTopic,
+  useTopicQuestions,
+} from "../api/queries";
 import type { QuestionProgress, TopicRead } from "../api/types";
 import { ErrorView, Loading } from "../components/QueryStates";
 import { getWidget } from "../widgets/registry";
 import DiscussPanel from "../components/DiscussPanel";
+import LessonView from "../components/LessonView";
 
 const TABS = [
   { id: "see", label: "See" },
@@ -103,16 +109,34 @@ function SeePanel({ topic }: { topic: TopicRead }) {
 }
 
 function UnderstandPanel({ topic }: { topic: TopicRead }) {
+  const lesson = useLesson(topic.slug);
+
   return (
-    <div className='panel'>
-      <p>{topic.summary}</p>
-      <h2 className='section-title'>By the end you should be able to</h2>
-      <ul className='objectives'>
-        {topic.objectives.map((objective) => (
-          <li key={objective.position}>{objective.text}</li>
-        ))}
-      </ul>
-    </div>
+    <>
+      <div className='panel'>
+        <p>{topic.summary}</p>
+        <h2 className='section-title'>By the end you should be able to</h2>
+        <ul className='objectives'>
+          {topic.objectives.map((objective) => (
+            <li key={objective.position}>{objective.text}</li>
+          ))}
+        </ul>
+      </div>
+      {lesson.isPending && <Loading label='Loading the lesson…' />}
+      {lesson.isError && (
+        <ErrorView error={lesson.error} onRetry={() => lesson.refetch()} />
+      )}
+      {lesson.data && <LessonView lesson={lesson.data} />}
+      {lesson.data === null && (
+        <div className='panel placeholder lesson-missing'>
+          <p className='card-title'>Full lesson coming soon</p>
+          <p>
+            The step-by-step explanation for this topic is still being written.
+            Meanwhile, try the questions in Practise.
+          </p>
+        </div>
+      )}
+    </>
   );
 }
 

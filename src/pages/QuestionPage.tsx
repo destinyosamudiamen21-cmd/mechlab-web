@@ -22,6 +22,7 @@ import type {
 } from "../api/types";
 import { ErrorView, Loading } from "../components/QueryStates";
 import ThreadList from "../components/ThreadList";
+import { ReadMore } from "../components/LessonView";
 
 type DecoderPrompt = QuestionRead["decoder"][number];
 type PartPrompt = QuestionRead["parts"][number];
@@ -225,6 +226,10 @@ function QuestionView({ slug }: { slug: string }) {
         <h2 className='heading'>Solution</h2>
         <Solution slug={question.slug} />
       </section>
+
+      {(question.references ?? []).length > 0 && (
+        <ReadMore references={question.references ?? []} />
+      )}
 
       <section className='question-section'>
         <h2 className='heading'>Ask the community</h2>

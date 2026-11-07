@@ -64,3 +64,38 @@ export type ProgressRead = {
   };
   courses: CourseProgress[];
 };
+
+// Lessons (GET /api/topics/{slug}/lesson). Written by hand to match app/models/lesson.py.
+export type Reference = { book: string; where: string };
+
+export type LessonBlock =
+  | { kind: "text"; text: string }
+  | {
+      kind: "formula";
+      label?: string | null;
+      formula: string;
+      where: string[];
+      source?: string | null;
+    }
+  | { kind: "note"; tone: "info" | "warning"; title: string; text: string }
+  | { kind: "list"; items: string[] }
+  | {
+      kind: "example";
+      title: string;
+      problem: string;
+      steps: string[];
+      answer: string;
+    }
+  | { kind: "table"; columns: string[]; rows: string[][] };
+
+export type Lesson = {
+  topic: string;
+  title: string;
+  big_idea: string;
+  you_will_learn: string[];
+  sections: { heading: string; blocks: LessonBlock[] }[];
+  summary: { term: string; meaning: string }[];
+  check_yourself: { question: string; answer: string }[];
+  references: Reference[];
+  review: { written_by?: string | null; checked_by?: string | null };
+};

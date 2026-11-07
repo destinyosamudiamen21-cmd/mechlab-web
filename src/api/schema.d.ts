@@ -534,6 +534,18 @@ export interface components {
             solved_by: string | null;
             /** Checked By */
             checked_by: string | null;
+            /**
+             * References
+             * @default []
+             */
+            references?: components["schemas"]["QuestionReference"][];
+        };
+        /** QuestionReference */
+        QuestionReference: {
+            /** Book */
+            book: string;
+            /** Where */
+            where: string;
         };
         /** QuestionSolution */
         QuestionSolution: {

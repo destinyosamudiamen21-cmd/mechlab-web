@@ -1,11 +1,12 @@
 import { useQuery } from "@tanstack/react-query";
 import type { QueryClient } from "@tanstack/react-query";
-import { postJson, request } from "./client";
+import { ApiError, postJson, request } from "./client";
 import type {
   AnswerResult,
   CourseRead,
   CourseSummary,
   DecodeResult,
+  Lesson,
   ProgressRead,
   QuestionRead,
   QuestionSolution,
@@ -32,6 +33,22 @@ export function useTopic(slug: string) {
   return useQuery({
     queryKey: ["topic", slug],
     queryFn: () => request<TopicRead>(`/topics/${encodeURIComponent(slug)}`),
+    enabled: slug !== "",
+  });
+}
+
+// The topic's lesson, or null when none is written yet (the API answers 404).
+export function useLesson(slug: string) {
+  return useQuery({
+    queryKey: ["topic", slug, "lesson"],
+    queryFn: async () => {
+      try {
+        return await request<Lesson>(`/topics/${encodeURIComponent(slug)}/lesson`);
+      } catch (error) {
+        if (error instanceof ApiError && error.status === 404) return null;
+        throw error;
+      }
+    },
     enabled: slug !== "",
   });
 }
